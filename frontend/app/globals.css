@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.font-display {
+  font-family: var(--font-display), serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
