@@ -15,18 +15,20 @@ import (
 )
 
 func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+    allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+    if allowedOrigin == "" {
+        allowedOrigin = "http://localhost:3000"
+    }
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+        if r.Method == "OPTIONS" {
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
 }
 
 func main() {
@@ -61,6 +63,10 @@ func main() {
 	mux.Handle("/api/aqi", aqiHandler)
 	mux.Handle("/api/stations", stationsHandler)
 
-	fmt.Println("Server jalan di http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", corsMiddleware(mux)))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback untuk lokal
+	}
+	fmt.Println("Server jalan di port:", port)
+	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(mux)))
 }
